@@ -1,0 +1,32 @@
+services:
+  db:
+    container_name: odoo_postgres
+    image: postgres:${POSTGRES_VERSION}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - ./postgresql:/var/lib/postgresql/data
+  web:
+    container_name: odoo_web
+    image: odoo:${ODOO_VERSION}
+    restart: on-failure
+    links:
+      - db
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    volumes:
+      - ./config:/etc/odoo
+      - ./odoo.modules:/mnt/extra-modules
+      - ./data:/var/lib/odoo
+      - ./custom.modules:/mnt/custom-modules
+      - ./logs:/var/log/odoo
